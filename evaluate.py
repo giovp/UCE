@@ -253,7 +253,8 @@ def run_eval(adata, name, pe_idx_path, chroms_path, starts_path, shapes_dict,
         dataset_embeds = np.vstack(dataset_embeds)
         adata.obsm["X_uce"] = dataset_embeds
         write_path = args.dir + f"{name}_uce_adata.h5ad"
-        adata.write(write_path)
+        # adata.write(write_path)
+        return adata
 
-        print("*****Wrote Anndata to:*****")
-        print(write_path)
+        # print("*****Wrote Anndata to:*****")
+        # print(write_path)
