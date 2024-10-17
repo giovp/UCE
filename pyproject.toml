@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "uce"  # Replace with your package name
+version = "0.0.0"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+
+# List your package dependencies
+dependencies = [
+  "numpy==1.26.4",
+  "scipy==1.14.1",
+  "pandas==2.2.2",
+  "tqdm==4.66.5",
+  "torch==2.1.1",
+  "scanpy==1.10.2",
+  "accelerate==0.24.0",
+  "requests==2.25.1",
+  "urllib3==1.26.6",
+]
+
+[tool.hatch.build]
+include = [
+  "eval_data.py",
+  "eval_single_anndata.py",
+  "evaluate.py",
+  "model.py",
+  "utils.py",
+  "data_proc/**",
+  "model_files/**",
+]
