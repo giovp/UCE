@@ -142,7 +142,7 @@ class AnndataProcessor:
         self.accelerator.wait_for_everyone()
         with open(self.shapes_dict_path, "rb") as f:
             shapes_dict = pickle.load(f)
-        run_eval(self.adata, self.name, self.pe_idx_path, self.chroms_path,
+        return run_eval(self.adata, self.name, self.pe_idx_path, self.chroms_path,
                  self.starts_path, shapes_dict, self.accelerator, self.args)
 
 
