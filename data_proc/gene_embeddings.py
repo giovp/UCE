@@ -42,6 +42,9 @@ def load_gene_embeddings_adata(adata: AnnData, species: list, embedding_model: s
     species_names = species
     species_names_set = set(species_names)
 
+    # set feature_name to var_names
+    adata.var_names = pd.Index(adata.var.feature_name.values.tolist())
+
     # Get embedding paths for the model
     species_to_gene_embedding_path = MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH[embedding_model]
     available_species = set(species_to_gene_embedding_path)
