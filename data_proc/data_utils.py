@@ -155,7 +155,8 @@ def anndata_to_sc_dataset(adata:sc.AnnData,
 def adata_path_to_prot_chrom_starts(adata, dataset_species, spec_pe_genes, gene_to_chrom_pos, offset):
     """
         Given a :path: to an h5ad, 
-    """    
+    """
+    print(f"'C12ORF50' in adata.var_names: {('C12ORF50' in adata.var_names)}")    
     pe_row_idxs = torch.tensor([spec_pe_genes.index(k.upper()) + offset for k in adata.var_names]).long()
     print(len(np.unique(pe_row_idxs)))
     
