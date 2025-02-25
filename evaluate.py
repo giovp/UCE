@@ -39,7 +39,7 @@ class AnndataProcessor:
         self.scp = ""
 
         # Check if paths exist, if not, create them
-        self.check_paths()
+        #self.check_paths()
 
         # Set up the anndata
         self.adata_name = self.args.adata_path.split("/")[-1]
