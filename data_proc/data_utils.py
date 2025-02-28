@@ -156,9 +156,7 @@ def adata_path_to_prot_chrom_starts(adata, dataset_species, spec_pe_genes, gene_
     """
         Given a :path: to an h5ad, 
     """
-    print(f"'C12ORF50' in adata.var_names: {('C12ORF50' in adata.var_names)}")    
     pe_row_idxs = torch.tensor([spec_pe_genes.index(k.upper()) + offset for k in adata.var_names]).long()
-    print(len(np.unique(pe_row_idxs)))
     
     spec_chrom = gene_to_chrom_pos[gene_to_chrom_pos["species"] == dataset_species].set_index("gene_symbol")
 
