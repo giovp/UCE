@@ -113,30 +113,30 @@ class AnndataProcessor:
 
     def generate_idxs(self):
         if self.accelerator.is_main_process:
-            if os.path.exists(self.pe_idx_path) and \
-                    os.path.exists(self.chroms_path) and \
-                    os.path.exists(self.starts_path):
-                print("PE Idx, Chrom and Starts files already created")
+            #if os.path.exists(self.pe_idx_path) and \
+            #        os.path.exists(self.chroms_path) and \
+            #        os.path.exists(self.starts_path):
+            #    print("PE Idx, Chrom and Starts files already created")
 
-            else:
-                species_to_pe = get_species_to_pe(self.args.protein_embeddings_dir)
-                with open(self.args.offset_pkl_path, "rb") as f:
-                    species_to_offsets = pickle.load(f)
+            #else:
+            species_to_pe = get_species_to_pe(self.args.protein_embeddings_dir)
+            with open(self.args.offset_pkl_path, "rb") as f:
+                species_to_offsets = pickle.load(f)
 
-                gene_to_chrom_pos = get_spec_chrom_csv(
-                    self.args.spec_chrom_csv_path)
-                dataset_species = self.args.species
-                spec_pe_genes = list(species_to_pe[dataset_species].keys())
-                offset = species_to_offsets[dataset_species]
-                pe_row_idxs, dataset_chroms, dataset_pos = adata_path_to_prot_chrom_starts(
-                    self.adata, dataset_species, spec_pe_genes, gene_to_chrom_pos, offset)
+            gene_to_chrom_pos = get_spec_chrom_csv(
+                self.args.spec_chrom_csv_path)
+            dataset_species = self.args.species
+            spec_pe_genes = list(species_to_pe[dataset_species].keys())
+            offset = species_to_offsets[dataset_species]
+            pe_row_idxs, dataset_chroms, dataset_pos = adata_path_to_prot_chrom_starts(
+                self.adata, dataset_species, spec_pe_genes, gene_to_chrom_pos, offset)
 
-                # Save to the temp dict
-                torch.save({self.name: pe_row_idxs}, self.pe_idx_path)
-                with open(self.chroms_path, "wb+") as f:
-                    pickle.dump({self.name: dataset_chroms}, f)
-                with open(self.starts_path, "wb+") as f:
-                    pickle.dump({self.name: dataset_pos}, f)
+            # Save to the temp dict
+            torch.save({self.name: pe_row_idxs}, self.pe_idx_path)
+            with open(self.chroms_path, "wb+") as f:
+                pickle.dump({self.name: dataset_chroms}, f)
+            with open(self.starts_path, "wb+") as f:
+                pickle.dump({self.name: dataset_pos}, f)
 
     def run_evaluation(self):
         self.accelerator.wait_for_everyone()
