@@ -26,6 +26,8 @@ MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH = {
 import os
 print("Current Directory:", os.getcwd())
 print("files in current directory:", os.listdir(os.getcwd()))
+print("files in /code directory:", os.listdir('/code'))
+
 
 extra_species = pd.read_csv("./model_files/new_species_protein_embeddings.csv").set_index("species").to_dict()["path"]
 MODEL_TO_SPECIES_TO_GENE_EMBEDDING_PATH["ESM2"].update(extra_species) # adds new species
