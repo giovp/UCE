@@ -4,14 +4,9 @@
 # These get packaged up into a .tar.gz file, uploaded to an S3 bucket, and then deployed to SageMaker via deploy.py
 
 import json
-from anndata import read_h5ad
-from omegaconf import OmegaConf
-import yaml
 from evaluate import AnndataProcessor
 from utils import download_s3_directory, download_s3_file
-import os
 import logging
-import os
 import numpy as np
 import argparse
 from accelerate import Accelerator
@@ -25,9 +20,11 @@ def model_fn(model_dir):
     Since the real model files are are over 25 GB, model_fn will download the model files from S3. model_dir is simply a placeholder.
     The model files should be stored in the /tmp/model_files directory.
     """
+    logger.info("Starting model function.")
     local_model_dir = "/tmp/model_files"  # SageMaker provides /tmp for temporary storage
     uce_model_files_s3_path = "s3://generate-cross-species/models/uce/"
     download_s3_directory(uce_model_files_s3_path, local_model_dir)
+    logger.info("Model files downloaded.")
     return local_model_dir
 
 
