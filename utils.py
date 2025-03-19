@@ -11,7 +11,9 @@ import os
 import requests
 from tqdm import tqdm
 import tarfile
-
+import boto3
+from urllib.parse import urlparse
+import anndata as ad
 
 def get_shapes_dict(dataset_path):
     shapes_dict = {}
@@ -101,3 +103,97 @@ def figshare_download(url, save_path):
        with tarfile.open(save_path) as tar:
             tar.extractall(path=os.path.dirname(save_path))
             print("Done!")
+
+
+def is_s3_url(path):
+    """Return True if the provided path is an S3 URL."""
+    return isinstance(path, str) and path.startswith("s3://")
+
+def download_s3_file(s3_url, dest_folder):
+    """
+    Download a file from an S3 URL to the specified destination folder.
+    
+    Parameters:
+    - s3_url (str): The S3 URL (e.g. s3://bucket/key).
+    - dest_folder (str): The local folder where the file should be saved.
+    
+    Returns:
+    - local_filename (str): The path to the downloaded file.
+    """
+    os.makedirs(dest_folder, exist_ok=True)
+    # Remove the "s3://" prefix and split the rest into bucket and key
+    without_prefix = s3_url.replace("s3://", "", 1)
+    bucket, key = without_prefix.split("/", 1)
+    local_filename = os.path.join(dest_folder, os.path.basename(key))
+    boto3.client("s3").download_file(bucket, key, local_filename)
+    return local_filename
+
+def download_s3_directory(s3_url, dest_folder):
+    """
+    Recursively download all files from an S3 URL representing a directory.
+    
+    Parameters:
+    - s3_url (str): The S3 URL for the directory (e.g. s3://bucket/path/to/dir).
+    - dest_folder (str): The local folder where the directory contents should be saved.
+    
+    Returns:
+    - dest_folder (str): The path to the directory where the files were downloaded.
+    """
+    os.makedirs(dest_folder, exist_ok=True)
+    parsed = urlparse(s3_url)
+    bucket = parsed.netloc
+    prefix = parsed.path.lstrip("/")
+    client = boto3.client("s3")
+    paginator = client.get_paginator("list_objects_v2")
+    for result in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in result.get('Contents', []):
+            s3_object_key = obj['Key']
+            # Compute the local path relative to the prefix
+            relative_path = os.path.relpath(s3_object_key, prefix)
+            local_file = os.path.join(dest_folder, relative_path)
+            os.makedirs(os.path.dirname(local_file), exist_ok=True)
+            client.download_file(bucket, s3_object_key, local_file)
+    return dest_folder
+
+def process_adata(adata_path):
+    """
+    Process an AnnData object from a file path.
+    
+    Args:
+        adata_path (str): The path to the AnnData object.
+
+    Returns:
+        AnnData: The processed AnnData object.
+    """
+    
+    adata = ad.read_h5ad(adata_path)
+    # set features to be gene symbols which is required
+    # by evaluate.AnndataProcessor
+    adata.var_names = pd.Index(list(adata.var["feature_name"]))
+    adata.var_names = adata.var["feature_name"].values
+    return adata
+
+
+def handle_s3_download(args, attr_name, dest, download_func, post_func=None):
+    """
+    Checks if the attribute value is an S3 URL and downloads it if needed.
+
+    Parameters:
+    -----------
+    args : argparse.Namespace
+        The parsed command-line arguments.
+    attr_name : str
+        The name of the attribute in args.
+    dest : str or Path
+        The destination directory/path to download the file/directory.
+    download_func : function
+        The function to use for downloading (e.g., download_s3_file or download_s3_directory).
+    post_func : function, optional
+        An optional post-processing function that further processes the downloaded file.
+    """
+    value = getattr(args, attr_name)
+    if value and is_s3_url(value):
+        new_value = download_func(value, dest)
+        if post_func:
+            new_value = post_func(new_value)
+        setattr(args, attr_name, new_value)

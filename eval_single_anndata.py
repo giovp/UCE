@@ -75,8 +75,12 @@ Returns:
 
 
 import argparse
+import os
+import tempfile
+import pathlib
 from evaluate import AnndataProcessor
 from accelerate import Accelerator
+from utils import download_s3_file, download_s3_directory, process_adata, handle_s3_download
 
 def main(args, accelerator):
     processor = AnndataProcessor(args, accelerator)
@@ -110,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=25,
                         help='Batch size.')
     parser.add_argument('--pad_length', type=int, default=1536,
-                        help='Batch size.')
+                        help='Pad length.')
     parser.add_argument("--pad_token_idx", type=int, default=0,
                         help="PAD token index")
     parser.add_argument("--chrom_token_left_idx", type=int, default=1,
@@ -151,5 +155,20 @@ if __name__ == "__main__":
                         help="PKL file which contains offsets for each species.")
 
     args = parser.parse_args()
+
+    model_files_dir_path = "./model_files"
+    
+    # Handle adata_path separately with a temporary directory and post-processing.
+    if args.adata_path:
+        mp_dir = pathlib.Path(tempfile.gettempdir()) / "temp_adata"
+        os.makedirs(mp_dir, exist_ok=True)
+        handle_s3_download(args, 'adata_path', mp_dir, download_s3_file, process_adata)
+
+    handle_s3_download(args, 'model_loc', model_files_dir_path, download_s3_file)
+    handle_s3_download(args, 'spec_chrom_csv_path', model_files_dir_path, download_s3_file)
+    handle_s3_download(args, 'token_file', model_files_dir_path, download_s3_file)
+    handle_s3_download(args, 'offset_pkl_path', model_files_dir_path, download_s3_file)
+    handle_s3_download(args, 'protein_embeddings_dir', f"{model_files_dir_path}/protein_embeddings", download_s3_directory)
+
     accelerator = Accelerator(project_dir=args.dir)
     main(args, accelerator)
