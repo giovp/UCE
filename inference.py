@@ -26,7 +26,7 @@ def model_fn(model_dir):
     The model files should be stored in the /tmp/model_files directory.
     """
     local_model_dir = "/tmp/model_files"  # SageMaker provides /tmp for temporary storage
-    uce_model_files_s3_path = "s3://generate-cross-species/models/uce_assets_03_12_25/"
+    uce_model_files_s3_path = "s3://generate-cross-species/models/uce/"
     download_s3_directory(uce_model_files_s3_path, local_model_dir)
     return local_model_dir
 
@@ -58,6 +58,9 @@ def input_fn(request_body, request_content_type):
 
     # Parse the input JSON
     input_dict = json.loads(request_body)
+    
+    for key in ["model_filename", "spec_chrom_csv_path", "token_file", "protein_embeddings_dir", "offset_pkl_path", "model_loc"]:
+        input_dict[key] = f"/tmp/model_files/{input_dict[key]}"
     logger.info(f"Input data: {input_dict}")
 
     # Get the adata_path from the input_dict and download the file from S3
