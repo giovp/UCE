@@ -197,3 +197,19 @@ def handle_s3_download(args, attr_name, dest, download_func, post_func=None):
         if post_func:
             new_value = post_func(new_value)
         setattr(args, attr_name, new_value)
+
+def download_model_from_s3(s3_bucket, s3_model_prefix, local_dir):
+    """Download model files from S3 to the SageMaker container's local storage."""
+    s3 = boto3.client("s3")
+    paginator = s3.get_paginator("list_objects_v2")
+    pages = paginator.paginate(Bucket=s3_bucket, Prefix=s3_model_prefix)
+
+    os.makedirs(local_dir, exist_ok=True)
+    
+    for page in pages:
+        if "Contents" in page:
+            for obj in page["Contents"]:
+                s3_key = obj["Key"]
+                local_file_path = os.path.join(local_dir, os.path.basename(s3_key))
+                s3.download_file(s3_bucket, s3_key, local_file_path)
+                print(f"Downloaded {s3_key} to {local_file_path}")
