@@ -23,7 +23,7 @@ def model_fn(model_dir):
     logger.info("Starting model function.")
     local_model_dir = "/tmp/model_files"  # SageMaker provides /tmp for temporary storage
     uce_model_files_s3_path = "s3://generate-cross-species/models/uce/"
-    download_s3_directory(uce_model_files_s3_path, local_model_dir)
+    # download_s3_directory(uce_model_files_s3_path, local_model_dir)
     logger.info("Model files downloaded.")
     return local_model_dir
 
