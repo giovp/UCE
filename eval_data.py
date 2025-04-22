@@ -145,26 +145,29 @@ def sample_cell_sentences(counts, batch_weights, dataset, args,
         
         # This loop is actually just over one cell
         for chrom in uq_chroms:
-            available_space = args.pad_length - i
-            if available_space < 2:  # need at least room for one gene token and a closing token
+            if i >= args.pad_length:
                 break
             ordered_choice_idx[i] = int(chrom) + args.CHROM_TOKEN_OFFSET
             i += 1
             loc = np.where(new_chrom == chrom)[0]
             sort_by_start = np.argsort(choosen_starts[loc])
             to_add = choice_idx[loc[sort_by_start]]
-            available_space = args.pad_length - i  # space left for gene tokens and closing token
-            space_for_genes = available_space - 1  
-            if len(to_add) > space_for_genes:
-                to_add = to_add[:space_for_genes]
-            if len(to_add) > 0:
-                ordered_choice_idx[i:(i + len(to_add))] = dataset_idxs[to_add, 0]
+            # Reserve space for closing token
+            remaining_space = args.pad_length - i - 1
+            if remaining_space <= 0:
+                break
+            if len(to_add) > remaining_space:
+                to_add = to_add[:remaining_space]
+                ordered_choice_idx[i:(i + len(to_add))] = dataset_idxs[to_add]
                 i += len(to_add)
-            if i < args.pad_length:
                 ordered_choice_idx[i] = args.chrom_token_right_idx
                 i += 1
-            else:
                 break
+            else:
+                ordered_choice_idx[i:(i + len(to_add))] = dataset_idxs[to_add]
+                i += len(to_add)
+                ordered_choice_idx[i] = args.chrom_token_right_idx
+                i += 1
 
         longest_seq_len = max(longest_seq_len, i)
         remainder_len = (args.pad_length - i)
